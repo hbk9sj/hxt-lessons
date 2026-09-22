@@ -69,7 +69,11 @@ if (li > 0) {
     const raw = existsSync(tj) ? JSON.parse(readFileSync(tj, "utf8")) : [];
     const ws = raw.map((w) => norm2(w.text)).filter(Boolean);
     const lw = st.say.split(/\s+/).map(norm2).filter(Boolean);
-    const okCount = Math.abs(ws.length - lw.length) <= 2;
+    // Spoken numbers come back as one token ("46.3" for four words), so only words that
+    // cannot be a number are counted; the tolerance grows a little with line length.
+    const hn = ws.filter((w) => !isNumberish(w)).length;
+    const en = lw.filter((w) => !isNumberish(w)).length;
+    const okCount = Math.abs(hn - en) <= Math.max(3, Math.round(en * 0.12));
     if (!okCount) {
       bad++;
       console.error(`narrate: line ${st.id} heard ${ws.length} words, expected ${lw.length}: "${ws.join(" ")}"`);
@@ -146,6 +150,10 @@ for (let li = 0; li < lineWords.length; li++) {
       break;
     }
   }
+  // Whisper merges hyphenated words and spoken numbers ("forty-six point three"), so on a
+  // long script its count drifts below the written one; clamp rather than run off the end.
+  start = Math.min(start, words.length - 1);
+  end = Math.min(Math.max(end, start), words.length - 1);
   out.push({ id: lesson.steps[li].id, start: words[start].start, end: words[end].end, words: end - start + 1, expected: lw.length });
   i = end + 1;
 }
@@ -161,25 +169,62 @@ const gaps = [];
   let m;
   while ((m = re.exec(sd))) gaps.push({ s: Number(m[1]), e: Number(m[2]) });
 }
-// Breaths between paragraphs can be as short as 0.25 s; a short gap near the guess is
-// preferred over a long one far from it, and every cut is proven below by transcription.
+// Where does each line begin in the heard stream? Not by counting words — Whisper writes
+// "21st" and "4.7" where the script says "twenty-first" and "four point seven", so the
+// counts drift (879 heard for 951 written on this film), and it splits names ("Cursor
+// bench"). So the anchor is matched on a letters-only character stream with numbers
+// dropped from both sides, then the cut is made at the real silence nearest that point.
+// Every cut is still proven below by transcribing each clip.
 const big = gaps.filter((g) => g.e - g.s >= 0.22);
+if (big.length < out.length - 1) {
+  console.error(`narrate: found ${big.length} pauses of 0.22 s or more but the lesson has ${out.length} lines — the narration does not match the script`);
+  process.exit(1);
+}
+const NUMWORD = new Set("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred thousand million billion point percent first second third".split(" "));
+const lettersOf = (w) => w.replace(/[^a-z]/g, "");
+// A hyphen is stripped by norm(), so "forty-six" arrives as "fortysix": treat any token
+// that is a run of number words as a number, not as text to match on.
+const NUMRE = new RegExp(`^(?:${[...NUMWORD].join("|")})+$`);
+const isNumberish = (w) => /\d/.test(w) || NUMWORD.has(w) || NUMRE.test(w);
+let heardStr = "";
+const charWord = []; // character index → word index
+words.forEach((w, wi) => {
+  const n = norm(w.text);
+  if (isNumberish(n)) return;
+  const t = lettersOf(n);
+  for (let c = 0; c < t.length; c++) charWord.push(wi);
+  heardStr += t;
+});
 const cuts = [0];
-const used = new Set();
+let fromChar = 0;
 for (let k = 1; k < out.length; k++) {
-  const guess = (out[k - 1].end + out[k].start) / 2;
-  let best = null;
-  for (const g of big) {
-    if (used.has(g)) continue;
-    const mid = (g.s + g.e) / 2;
-    const score = Math.abs(mid - guess) + Math.max(0, 0.5 - (g.e - g.s)) * 1.5;
-    if (!best || score < best.score) best = { ...g, score };
+  let anchor = "";
+  for (const w of lineWords[k]) {
+    if (isNumberish(w)) continue;
+    anchor += lettersOf(w);
+    if (anchor.length >= 20) break;
   }
-  if (!best || Math.abs((best.s + best.e) / 2 - guess) > 1.8) {
-    console.error(`narrate: no silence near the boundary before line ${out[k].id} (guess ${guess.toFixed(2)}s) — refusing to cut mid-word`);
+  if (anchor.length < 8) {
+    console.error(`narrate: line ${out[k].id} starts with too little plain text to anchor on`);
     process.exit(1);
   }
-  used.add(best);
+  const ci = heardStr.indexOf(anchor, fromChar);
+  const at = ci < 0 ? -1 : charWord[ci];
+  if (at < 1) {
+    console.error(`narrate: could not find the start of line ${out[k].id} ("${anchor}") in the narration`);
+    process.exit(1);
+  }
+  fromChar = ci + anchor.length;
+  const guess = (Number(words[at - 1].end) + Number(words[at].start)) / 2;
+  let best = null;
+  for (const g of big) {
+    const d = Math.abs((g.s + g.e) / 2 - guess);
+    if (!best || d < best.d) best = { ...g, d };
+  }
+  if (best.d > 2.5) {
+    console.error(`narrate: no silence near the start of line ${out[k].id} (heard at ${guess.toFixed(2)}s, nearest pause ${best.d.toFixed(2)}s away) — refusing to cut mid-word`);
+    process.exit(1);
+  }
   cuts.push(best);
 }
 for (let k = 0; k < out.length; k++) {
@@ -229,17 +274,34 @@ const near = (heard, want) => heard === want || (!chopped(heard, want) && skel(w
     // word timings relative to the clip, for word-by-word captions
     l.wordsTimed = raw.filter((w) => norm(w.text)).map((w) => ({ text: w.text.trim(), start: Number(w.start), end: Number(w.end) }));
     const lw = lineWords[k];
-    // Whisper mishears a word on a short clip ("clod" for "claude", "flides" for
-    // "slides") while hearing it right in the full file. Vowels are what it gets wrong;
-    // a chopped word loses consonants. So compare consonant skeletons ("cld" = "cld",
-    // "flds" ~ "slds") and allow one edit there; "d" for a chopped "claude" still fails.
-    const okFirst = ws.length && near(ws[0], lw[0]);
-    const okLast = ws.length && near(ws[ws.length - 1], lw[lw.length - 1]);
-    const okCount = Math.abs(ws.length - lw.length) <= 2;
-    l.proof = { heard: ws.length, expected: lw.length, first: okFirst, last: okLast };
+    // A clip is proven by its edges. Compare them as letters, not tokens: Whisper splits
+    // names ("deep swe" for "DeepSWE"), merges spoken numbers into digits, and mishears the
+    // odd vowel, so token equality is the wrong test — what matters is that the clip starts
+    // and ends with the same run of letters as the line.
+    // Take words from the edge until there are enough letters: a line that ends in numbers
+    // ("at fifty-one point eight") needs a wider window to have anything to compare.
+    const edge = (arr, fromEnd) => {
+      let out = "";
+      for (let n = 0; n < Math.min(12, arr.length) && out.length < 10; n++) {
+        const w = arr[fromEnd ? arr.length - 1 - n : n];
+        if (isNumberish(w)) continue;
+        out = fromEnd ? lettersOf(w) + out : out + lettersOf(w);
+      }
+      return out;
+    };
+    const shares = (a, b, n) => a.length >= n && b.length >= n && (a.startsWith(b.slice(0, n)) || b.startsWith(a.slice(0, n)));
+    const sharesEnd = (a, b, n) => a.length >= n && b.length >= n && (a.endsWith(b.slice(-n)) || b.endsWith(a.slice(-n)));
+    const okFirst = ws.length && shares(edge(ws, false), edge(lw, false), 8);
+    const okLast = ws.length && sharesEnd(edge(ws, true), edge(lw, true), 8);
+    // Spoken numbers come back as one token ("46.3" for four words), so only words that
+    // cannot be a number are counted; the tolerance grows a little with line length.
+    const hn = ws.filter((w) => !isNumberish(w)).length;
+    const en = lw.filter((w) => !isNumberish(w)).length;
+    const okCount = Math.abs(hn - en) <= Math.max(3, Math.round(en * 0.12));
+    l.proof = { heard: hn, expected: en, first: okFirst, last: okLast };
     if (!(okFirst && okLast && okCount)) {
       bad++;
-      console.error(`narrate: clip ${l.id} does not match its line — heard "${ws.slice(0, 3).join(" ")} … ${ws.slice(-3).join(" ")}" (${ws.length} words) for "${lw.slice(0, 3).join(" ")} … ${lw.slice(-3).join(" ")}" (${lw.length})`);
+      console.error(`narrate: clip ${l.id} does not match its line — heard "${ws.slice(0, 3).join(" ")} … ${ws.slice(-3).join(" ")}" (${hn} non-number words) for "${lw.slice(0, 3).join(" ")} … ${lw.slice(-3).join(" ")}" (${en})${okFirst ? "" : " [first word differs]"}${okLast ? "" : " [last word differs]"}`);
     }
   }
   rmSync(td2, { recursive: true, force: true });

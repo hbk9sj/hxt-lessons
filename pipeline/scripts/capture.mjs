@@ -61,7 +61,10 @@ const frames = []; // { file, ts } ts = epoch seconds from Chromium
 let T0 = 0; // epoch ms when the recording clock started
 const now = () => (Date.now() - T0) / 1000;
 
-const browser = await chromium.launch();
+// A sandbox may ship a Chromium that Playwright's own version pin does not match (the
+// cloud runner has 1194 while playwright 1.58 wants 1208, and the download CDN is blocked
+// there). PW_EXECUTABLE points the launcher at whatever browser is actually installed.
+const browser = await chromium.launch(process.env.PW_EXECUTABLE ? { executablePath: process.env.PW_EXECUTABLE } : {});
 const context = await browser.newContext({
   viewport: lesson.viewport,
   deviceScaleFactor: 2,

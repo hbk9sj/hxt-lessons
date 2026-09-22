@@ -43,9 +43,16 @@ abort, and never post without `out/verify.json` saying `ok: true`.**
 4. Tooling check, in this order, and write what you find into the run record:
    `node --version` (need 20+), `ffmpeg -version`, `ffprobe -version`. If ffmpeg is
    missing: `curl -fsSL --max-time 120 -o /tmp/ff.tar.xz https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz && tar -xJf /tmp/ff.tar.xz -C /tmp && install -m 0755 /tmp/ffmpeg-master-latest-linux64-gpl/bin/ff* /usr/local/bin/`.
-   **Never run apt-get** (it hangs in this sandbox). Then `cd pipeline && npm ci && npx playwright install chromium`
-   (with `--with-deps` if you are root and it asks; if the browser download is blocked, note
-   it — step 5 has a fallback).
+   **Never run apt-get** (it hangs in this sandbox). Then `cd pipeline && npm ci`.
+   **The browser**: `npx playwright install chromium` usually fails here — cdn.playwright.dev
+   is outside the egress allowlist (403), and the sandbox already ships browsers under
+   `$PLAYWRIGHT_BROWSERS_PATH` (`/opt/pw-browsers`) at a version Playwright's pin does not
+   match. Do not fight it: find the binary and point the recorder at it —
+   `export PW_EXECUTABLE=$(ls -d /opt/pw-browsers/chromium-*/chrome-linux/chrome 2>/dev/null | head -1)`
+   (`capture.mjs` uses `PW_EXECUTABLE` as the executable path when it is set). Check it
+   launches: `node -e "require('playwright').chromium.launch({executablePath:process.env.PW_EXECUTABLE}).then(b=>b.close()).then(()=>console.log('browser ok'))"`.
+   Keep `PW_EXECUTABLE` exported for every later command. If it still cannot launch, note it
+   — step 5 has a fallback.
 
 ## 1. Pick the tool (Exa, no spend)
 Categories, in rotation by day of month (day mod 6): 0 AI coding tools · 1 design tools ·

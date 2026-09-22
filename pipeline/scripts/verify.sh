@@ -5,6 +5,8 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 MP4="${1:-out/lesson.mp4}"
 EXPECT="${EXPECT_SIZE:-1920,1080}"
+# Duration bounds: a one-minute lesson by default; a longer film sets EXPECT_DUR="min,max".
+BOUNDS="${EXPECT_DUR:-50,68}"
 for t in ffprobe ffmpeg python3; do command -v "$t" >/dev/null || { echo "verify: $t missing" >&2; exit 2; }; done
 [ -f "$MP4" ] || { echo "verify: $MP4 missing" >&2; exit 2; }
 [ -f capture/timeline.json ] || { echo "verify: capture/timeline.json missing" >&2; exit 2; }
@@ -24,12 +26,13 @@ tl=json.load(open('capture/timeline.json')); ln={l['id']:l for l in json.load(op
 print(max(s['clipStart']+ln[s['id']]['clipDuration'] for s in tl['steps']))")
 echo "verify: duration=${dur}s size=${wh} mean_volume=${vol}dB timeline_end=${tl_end}s last_voice_end=${last_voice_end}s (lead ${lead}s)"
 
-python3 - "$dur" "$wh" "$vol" "$tl_end" "$last_voice_end" "$lead" "$EXPECT" <<'PY' || fail=1
+python3 - "$dur" "$wh" "$vol" "$tl_end" "$last_voice_end" "$lead" "$EXPECT" "$BOUNDS" <<'PY' || fail=1
 import sys
-dur,wh,vol,tl,lve,lead,expect=sys.argv[1:]
+dur,wh,vol,tl,lve,lead,expect,bounds=sys.argv[1:]
+lo,hi=[float(x) for x in bounds.split(",")]
 dur=float(dur); vol=float(vol or -999); tl=float(tl); lve=float(lve); lead=float(lead)
 bad=[]
-if not (50<=dur<=68): bad.append(f"duration {dur:.1f}s outside 50–68")
+if not (lo<=dur<=hi): bad.append(f"duration {dur:.1f}s outside {lo:g}–{hi:g}")
 if wh.strip()!=expect: bad.append(f"size {wh.strip()} != {expect}")
 if vol<-30: bad.append(f"mean_volume {vol} dB below -30 (silent or near it)")
 if lve>tl or tl-lve>3.0: bad.append(f"last narration clip ends at {lve:.1f}s, video ends at {tl:.1f}s (must be inside and within 3 s)")
