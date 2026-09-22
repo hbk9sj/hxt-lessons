@@ -1,0 +1,29 @@
+xAI shipped Grok 4.7 on 21 September 2026 at the same $2 / $6 price as Grok 4.6. We read the launch table row by row, then check it against the independent numbers — and find the same benchmark scored 38% by xAI and 26% by Artificial Analysis. Where Grok 4.7 genuinely wins, where it comes third, and who should actually switch.
+
+0:00 Grok 4.7 is here — and the claim
+0:21 What actually changed
+0:52 xAI’s own benchmark table
+1:17 Price: $2 / $6 vs the frontier
+1:39 CursorBench 4.0
+2:01 DeepSWE v1.1
+2:22 EEBench — where Grok wins
+2:41 Harvey legal agent — the odd one
+3:03 HealthBench Professional
+3:21 Terminal-Bench: the big jump
+3:38 Checking it independently
+3:53 38% or 26%? The disagreement
+4:30 Artificial Analysis index
+5:03 The effort-level catch
+5:38 Safety and cyber
+6:20 Price, context and availability
+6:37 Who should switch
+7:10 Sources
+
+Sources (every figure comes from these pages):
+• https://x.ai/news/grok-4-7
+• https://artificialanalysis.ai/models/grok-4-7
+• https://www.tbench.ai/leaderboard
+
+Made by Hit x Trial — the numbers, read in order.
+
+#Grok47 #xAI #AIbenchmarks #ClaudeFable51 #GPT6 #AIcoding #LLM #AInews #TerminalBench #CursorBench

@@ -1,0 +1,169 @@
+{
+  "title": "Grok 4.7: cheapest at the frontier?",
+  "mode": "tour",
+  "viewport": {
+    "width": 1440,
+    "height": 810
+  },
+  "chrome": "x.ai/news/grok-4-7",
+  "colorScheme": "dark",
+  "hide": [
+    "[class*='cookie' i]",
+    "[class*='newsletter' i]"
+  ],
+  "steps": [
+    {
+      "id": "01",
+      "say": "On September twenty-first, xAI shipped Grok four point seven. Same price as the model before it, a bigger brain behind it, and a claim on the front page: twice as fast, at half the price of comparable models. Let's read the actual numbers, including the ones xAI didn't put on the page.",
+      "page": "https://x.ai/news/grok-4-7",
+      "zoom": {
+        "target": "wide"
+      }
+    },
+    {
+      "id": "02",
+      "say": "Start with what changed. Grok four point seven uses a new, larger base model, trained with a longer reinforcement learning run on harder tasks, weighted toward problems that take many hours. In plain words: they trained it to keep going, and to check its own work.",
+      "show": "Model Improvements",
+      "zoom": {}
+    },
+    {
+      "id": "03",
+      "say": "That matters because the benchmarks that moved most are the long ones. Short questions were already close to saturated across every lab. The race now is whether a model can run for an hour without losing the thread.",
+      "show": "Grok 4.7 uses a new, larger base model",
+      "zoom": {}
+    },
+    {
+      "id": "04",
+      "say": "Here's xAI's own comparison table. Four columns: Grok four point seven at extra-high effort, Grok four point six, GPT five point six Sol, and Claude Fable five point one. Keep one thing in mind the whole way down: every number in this table, including the rivals', was measured by xAI.",
+      "show": "Input token price",
+      "zoom": {}
+    },
+    {
+      "id": "05",
+      "say": "Price first, because it's the strongest part of the story. Two dollars per million input tokens, six dollars out. GPT five point six Sol is four and twenty. Fable five point one is ten and fifty. On output tokens, Grok is roughly eight times cheaper than Anthropic's top tier.",
+      "show": "Output token price",
+      "zoom": {}
+    },
+    {
+      "id": "06",
+      "say": "CursorBench four point zero, which runs longer coding tasks inside the Cursor editor: Grok scores forty-six point three, up from forty point four. That beats GPT five point six Sol at forty-one point seven, and loses to Fable five point one at fifty-one point eight.",
+      "show": "CursorBench 4.0",
+      "zoom": {}
+    },
+    {
+      "id": "07",
+      "say": "DeepSWE, repository-level software engineering: seventy-one percent, with an asterisk. The asterisk means that one was run at high effort, not extra-high. GPT five point six Sol leads at seventy-two point seven. These three are within two points of each other.",
+      "show": "DeepSWE v1.1",
+      "zoom": {}
+    },
+    {
+      "id": "08",
+      "say": "Electrical engineering is where Grok actually wins the table. Sixty-four percent on EEBench, against thirty-nine for GPT five point six Sol and fifty-six for Fable. xAI trains on SpaceX engineering data, and this is the row where that shows up.",
+      "show": "EEBench",
+      "zoom": {}
+    },
+    {
+      "id": "09",
+      "say": "Legal work is the other clear win, and it's a strange one. On Harvey's legal agent benchmark Grok scores nineteen point six percent, against two point five for GPT five point six Sol and six point seven for Fable. A gap that large usually says more about the harness than the brains.",
+      "show": "Harvey Legal Agent Benchmark",
+      "zoom": {}
+    },
+    {
+      "id": "10",
+      "say": "Clinical reasoning goes the other way. Fifty-six point seven on HealthBench Professional, behind GPT at sixty point five and Fable at sixty-two point one. Up eight points from Grok four point six, still third in its own table.",
+      "show": "HealthBench Professional",
+      "zoom": {}
+    },
+    {
+      "id": "11",
+      "say": "Now the row worth arguing about. Terminal-Bench four point zero, multi-hour terminal work: thirty-eight percent, nearly double Grok four point six. xAI calls it the largest jump in the release. Hold that number for a minute.",
+      "show": "Terminal-Bench 4.0",
+      "zoom": {}
+    },
+    {
+      "id": "12",
+      "say": "Terminal-Bench is a public benchmark with sixty-six tasks, built by the Laude Institute and Stanford researchers. Anyone can run it, and the leaderboard is public. So we can check.",
+      "page": "https://www.tbench.ai/leaderboard",
+      "show": "RESOLUTION RATE",
+      "zoom": {}
+    },
+    {
+      "id": "13",
+      "say": "On that leaderboard, xAI's own run, with its own Grok Build harness, sits at thirty-seven point six — near enough to the thirty-eight on the page. Artificial Analysis, running the same tasks with a standard harness, got twenty-six.",
+      "show": "Grok 4.7",
+      "zoom": {}
+    },
+    {
+      "id": "14",
+      "say": "That's not cheating, it's the state of benchmarking. A model's score depends on the scaffolding around it, and a lab tests its own model on its own scaffolding. It does mean a vendor table is a starting point, not a verdict.",
+      "show": "AGENT",
+      "zoom": {}
+    },
+    {
+      "id": "15",
+      "say": "For the same reason, look at where each model sits on an independent index.",
+      "page": "https://artificialanalysis.ai/models/grok-4-7",
+      "show": "Model summary",
+      "zoom": {}
+    },
+    {
+      "id": "16",
+      "say": "Artificial Analysis combines ten evaluations into one intelligence index. Grok four point seven scores forty-six and lands sixteenth. Claude Fable five point one and GPT-six Astra both score fifty-three. Mid-pack at the frontier, not the top of it.",
+      "show": "Artificial Analysis Intelligence Index",
+      "zoom": {}
+    },
+    {
+      "id": "17",
+      "say": "One more caution before you read any of these as a ranking. xAI's table compares Grok four point seven at extra-high effort with Grok four point six at high. That's a cross-effort comparison, so part of every delta is simply more thinking time, bought at more tokens.",
+      "show": "Verbosity",
+      "zoom": {}
+    },
+    {
+      "id": "18",
+      "say": "And Artificial Analysis notes the model's two highest reasoning levels perform about the same, while it generated two hundred and forty million tokens getting through the index, well above the median. Thinking longer is the lever, and you pay for the tokens either way.",
+      "show": "Comparison Summary",
+      "zoom": {}
+    },
+    {
+      "id": "19",
+      "say": "Back to the release, because the safety section is the part most coverage skipped.",
+      "page": "https://x.ai/news/grok-4-7",
+      "show": "Safety & Cybersecurity",
+      "zoom": {}
+    },
+    {
+      "id": "20",
+      "say": "New safeguard stack, and the claim is the strongest refusal and jailbreak resistance they've tested. On their own HackerBench, three point three percent of risky dual-use prompts got through, while legitimate security work was rarely blocked. Their benchmark, their number, but the shape of it is the right one.",
+      "show": "Grok 4.7 was built with an entirely new safeguard stack",
+      "zoom": {}
+    },
+    {
+      "id": "21",
+      "say": "Where you can use it: Cursor on every plan, Grok Build by default, the Grok API, plus routers and clouds. Five hundred thousand tokens of context, four reasoning levels, text and images in, text out.",
+      "show": "Pricing and availability",
+      "zoom": {}
+    },
+    {
+      "id": "22",
+      "say": "So, the honest summary. If your work looks like a coding session with a person watching, Grok four point seven is the value play: competitive scores, a fraction of the price, and cost per task at the bottom of the chart.",
+      "show": "The model is priced starting at",
+      "zoom": {}
+    },
+    {
+      "id": "23",
+      "say": "If your work is an agent left alone for hours, the independent numbers say look at Fable five point one or GPT-six Astra, and expect to pay for it. Cheapest at the frontier is a real position. It isn't the same as best.",
+      "show": "Introducing Grok 4.7",
+      "zoom": {
+        "target": "wide"
+      }
+    },
+    {
+      "id": "24",
+      "say": "Every figure here is from xAI's release page, Terminal-Bench's public leaderboard and Artificial Analysis, all linked below. If you want the next model release read this way, subscribe.",
+      "show": "Grok 4.6",
+      "zoom": {
+        "target": "wide"
+      }
+    }
+  ]
+}
