@@ -43,9 +43,16 @@ abort, and never post without `out/verify.json` saying `ok: true`.**
 4. Tooling check, in this order, and write what you find into the run record:
    `node --version` (need 20+), `ffmpeg -version`, `ffprobe -version`. If ffmpeg is
    missing: `curl -fsSL --max-time 120 -o /tmp/ff.tar.xz https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz && tar -xJf /tmp/ff.tar.xz -C /tmp && install -m 0755 /tmp/ffmpeg-master-latest-linux64-gpl/bin/ff* /usr/local/bin/`.
-   **Never run apt-get** (it hangs in this sandbox). Then `cd pipeline && npm ci && npx playwright install chromium`
-   (with `--with-deps` if you are root and it asks; if the browser download is blocked, note
-   it — step 5 has a fallback).
+   **Never run apt-get** (it hangs in this sandbox). Then `cd pipeline && npm ci`.
+   **Do not try to record in this sandbox.** Measured on the first run (22 Sep 2026): the
+   browser download host `cdn.playwright.dev` is outside the egress allowlist (403), the
+   pre-installed browsers under `/opt/pw-browsers` are a version Playwright's pin rejects,
+   and even with a browser wired up, loading a vendor page fails with
+   `ERR_TUNNEL_CONNECTION_FAILED` — arbitrary sites are not reachable through the proxy.
+   So **rendering happens on GitHub Actions** (step 5), which is the normal path, not a
+   fallback. Spend no time on Playwright here. (`capture.mjs` honours `PW_EXECUTABLE` if a
+   future sandbox does ship a usable browser and open egress: export it and the dry run and
+   build work locally.)
 
 ## 1. Pick the tool (Exa, no spend)
 Categories, in rotation by day of month (day mod 6): 0 AI coding tools · 1 design tools ·
@@ -87,10 +94,11 @@ Rules:
   (headings there are the page's headings). Prefer headings on docs/changelog/feature
   pages. A step with nothing to point at uses `"zoom": {"target": "wide"}` and no `show`.
   Never `click` unless the target is a same-site link and the next step needs that page.
-- **Dry run first**: `cd lessons/<slug> && node scripts/capture.mjs --dry`. Read its
-  output: any `not found` line means that `show` text is wrong — fix it from the page and
-  rerun. Two misses exit 2. Look at `capture/dry.png`. Do not continue until the dry run
-  reports no miss.
+- **Check every `show` string without a browser**: it must appear **verbatim** in the text
+  `crawling_exa` returned for that page (that text is the page's own headings and copy).
+  Copy the string from there rather than typing it; a heading the recorder cannot find is
+  the one thing that fails the build on Actions, where you cannot iterate quickly. If a
+  page's crawl shows no usable headings, pick a different page.
 Also write `lessons/<slug>/caption.json`:
 ```
 { "youtube_title": "<≤ 60 chars, names the tool and the change>",
@@ -113,7 +121,8 @@ Text = the eight `say` lines joined with a blank line between them (exactly what
 in the record and abort after the download. Download the result URL to
 `lessons/<slug>/assets/voice/narration.mp3`; `ffprobe` it (expect 40–70 s). Note the task id.
 
-## 4. Build (no spend)
+## 4. Build — only if this sandbox ever gains a browser and open egress (no spend)
+Skip straight to step 5 unless `PW_EXECUTABLE` launched and a vendor page actually loaded.
 `cd lessons/<slug> && bash scripts/build.sh 2>&1 | tee out/build.log`. This cuts the
 narration into lines and proves every cut by transcription, records the tour with a
 humanised pointer, composes the Hit x Trial stage, checks (0 errors and real audit counts),
@@ -124,15 +133,17 @@ script over 68 s (shorten a line — but the narration is already made, so only 
 whole step's line is not possible; instead abort with "script too long, <n> s"). Do not
 touch the pipeline scripts.
 
-## 5. Fallback if the sandbox cannot render (no spend)
-If `build.sh` fails for an environment reason (no Chromium, HyperFrames render or the
-Whisper model download blocked, ffmpeg missing) and not for a lesson reason: commit and push
+## 5. Render on GitHub Actions (the normal path, no spend)
+Commit and push
 `lessons/<slug>/` (lesson.json, caption.json, assets/voice/narration.mp3) with the message
-`lesson: <slug> (render on actions)`, then poll `git fetch origin main && git show
-origin/main:lessons/<slug>/out/verify.json` every 60 s for up to 25 minutes — the
-`lesson` GitHub Actions workflow builds it and commits `out/`. When it appears with `ok:
-true`, `git pull --rebase` and continue. If it does not appear, abort: "render failed in
-sandbox and on Actions — see Actions run".
+`lesson: <slug>`, then poll `git fetch origin main && git show
+origin/main:lessons/<slug>/out/verify.json` every 60 s for up to 25 minutes — the `lesson`
+GitHub Actions workflow builds it and commits `out/`. When it appears with `ok: true`,
+`git pull --rebase` and continue. If it does not appear, read the workflow's log
+(`gh run list --workflow=lesson --limit 3` and `gh run view <id> --log-failed`, or the
+committed `lessons/<slug>/out/build.log`): a `not found` line names a `show` string to fix —
+fix `lesson.json`, push again, and poll once more. Two failed attempts abort the run:
+"render failed on Actions — see <the reason>".
 
 ## 6. Look before you post (no spend)
 Extract three frames from `out/lesson-9x16.mp4` at 5 s, 25 s and 45 s with ffmpeg and
