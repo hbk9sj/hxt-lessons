@@ -25,9 +25,11 @@ const PORTRAIT = flag("--portrait");
 const VIDEO = opt("--video", PORTRAIT ? "out/lesson-9x16.mp4" : "out/lesson.mp4");
 const OUT = opt("--out", PORTRAIT ? "out/thumb-9x16.png" : "out/thumb.png");
 const SIZE = PORTRAIT ? "1080:1920" : "1280:720";
-const FROM = 3,
-  TO = 20,
-  STEP = 0.5,
+// Default window: after the title lands, before the lesson is deep in detail. A longer
+// film passes its own (--from/--to), since 3–20 s of a seven-minute video is just the intro.
+const FROM = Number(opt("--from", 3)),
+  TO = Number(opt("--to", 20)),
+  STEP = Number(opt("--step", 0.5)),
   MOVE = 1.3;
 
 const W = 320;
@@ -105,7 +107,7 @@ for (let t = FROM; t <= Math.min(TO, dur - 0.5); t += STEP) {
   if (!best || s > best.s) best = { t, s };
 }
 if (!best) {
-  console.error("thumbnail: no frame outside camera moves between 3 s and 20 s");
+  console.error(`thumbnail: no frame outside camera moves between ${FROM} s and ${TO} s`);
   process.exit(1);
 }
 mkdirSync(join(ROOT, "out"), { recursive: true });

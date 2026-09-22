@@ -1,4 +1,4 @@
-xAI shipped Grok 4.7 on 21 September 2026 at the same $2 / $6 price as Grok 4.6. We read the launch table row by row, then check it against the independent numbers — and find the same benchmark scored 38% by xAI and 26% by Artificial Analysis. Where Grok 4.7 genuinely wins, where it comes third, and who should actually switch.
+xAI shipped Grok 4.7 on 21 September 2026 at the same $2 / $6 price as Grok 4.6. We read the launch table row by row, then check it against the independent numbers — and find the same benchmark reading 37.6% on the public leaderboard with xAI’s own harness, and 26% at Artificial Analysis. Where Grok 4.7 genuinely wins, where it comes third, and who should actually switch.
 
 0:00 Grok 4.7 is here — and the claim
 0:21 What actually changed
@@ -11,13 +11,13 @@ xAI shipped Grok 4.7 on 21 September 2026 at the same $2 / $6 price as Grok 4.6.
 3:03 HealthBench Professional
 3:21 Terminal-Bench: the big jump
 3:38 Checking it independently
-3:53 38% or 26%? The disagreement
-4:30 Artificial Analysis index
-5:03 The effort-level catch
-5:38 Safety and cyber
-6:20 Price, context and availability
-6:37 Who should switch
-7:10 Sources
+3:51 37.6% or 26%? The disagreement
+4:27 Artificial Analysis index
+4:59 The effort-level catch
+5:34 Safety and cyber
+6:15 Price, context and availability
+6:32 Who should switch
+7:04 Sources
 
 Sources (every figure comes from these pages):
 • https://x.ai/news/grok-4-7

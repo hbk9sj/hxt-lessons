@@ -24,6 +24,7 @@
 // held frame, never a time slip.
 
 import { chromium } from "playwright";
+import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -52,7 +53,17 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const CAP = join(ROOT, "capture");
 const FRAMES = join(CAP, "frames");
 if (!DRY) {
-  rmSync(CAP, { recursive: true, force: true });
+  // A film leaves ~13k frames here, and on macOS the recursive remove occasionally fails
+  // with ENOTEMPTY while the indexer still holds the directory. Retry rather than abort.
+  for (let i = 0; i < 5; i++) {
+    try {
+      rmSync(CAP, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+      break;
+    } catch (e) {
+      if (i === 4) throw e;
+      spawnSync("sleep", ["1"]);
+    }
+  }
   mkdirSync(FRAMES, { recursive: true });
 }
 
@@ -323,7 +334,12 @@ for (let i = 0; i < lesson.steps.length; i++) {
   const clipStart = i === 0 ? AUDIO_LEAD : now() + between(0.6, 0.9); // a narrator breathes between ideas
   const lineStart = clipStart + line.speechOffset;
   const lineEnd = lineStart + line.duration;
-  const actAt = step.actAt === "after" ? lineEnd + 0.25 : lineStart + 0.45 * line.duration;
+  // The picture must arrive with the words, not after them. "Mid-line" was written for a
+  // one-minute lesson whose lines run 2–4 s (a 1–2 s delay); on a film with 20-second lines
+  // the same fraction put the scroll 8 s late, which reads as a sync fault. Cap the delay:
+  // a tour scrolls almost immediately (a page load takes a beat of its own), a click-driven
+  // lesson still waits a moment so the sentence sets the action up.
+  const actAt = step.actAt === "after" ? lineEnd + 0.25 : lineStart + Math.min(0.45 * line.duration, IS_TOUR ? 0.35 : 1.2);
   if (!DRY) await waitUntil(actAt);
 
   const rec = { id: step.id, clip: line.clip, clipStart, lineStart, lineEnd, actionStart: now(), zoom: null, pullBackTo: null };
