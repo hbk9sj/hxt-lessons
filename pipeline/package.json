@@ -1,0 +1,18 @@
+{
+  "name": "screen-lesson",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "narrate": "node scripts/narrate.mjs",
+    "capture": "node scripts/capture.mjs",
+    "footage": "bash scripts/footage.sh",
+    "compose": "node scripts/compose.mjs",
+    "check": "npx --yes hyperframes@0.8.31 check",
+    "render": "npx --yes hyperframes@0.8.31 render --output out/lesson.mp4",
+    "verify": "bash scripts/verify.sh",
+    "build": "npm run capture && npm run footage && npm run compose && npm run check && npm run render && npm run verify"
+  },
+  "dependencies": {
+    "playwright": "1.58.2"
+  }
+}
