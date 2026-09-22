@@ -1,0 +1,9 @@
+node_modules/
+lessons/*/capture/
+lessons/*/out/frames/
+lessons/*/out/*.log
+lessons/*/out/contact.png
+lessons/*/assets/voice/narration.wav
+lessons/*/assets/voice/*.wav
+lessons/*/index.html
+.DS_Store

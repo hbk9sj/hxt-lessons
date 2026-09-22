@@ -1,0 +1,52 @@
+name: lesson
+# Fallback renderer: when the scheduled session cannot render in its own sandbox, it pushes
+# lessons/<slug>/ (lesson.json + narration.mp3) and this builds it and commits out/.
+on:
+  push:
+    branches: [main]
+    paths: ["lessons/*/lesson.json", "lessons/*/assets/voice/narration.mp3"]
+  workflow_dispatch:
+    inputs:
+      lesson:
+        description: "lesson directory name under lessons/ (empty = every lesson without out/verify.json)"
+        required: false
+concurrency:
+  group: lesson
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: sudo apt-get install -y -qq ffmpeg >/dev/null && ffmpeg -version | head -1
+      - run: cd pipeline && npm ci && npx playwright install --with-deps chromium
+      - name: build every lesson that has no verify.json yet
+        env:
+          ONLY: ${{ github.event.inputs.lesson }}
+        run: |
+          set -euo pipefail
+          for d in lessons/*/; do
+            slug=$(basename "$d")
+            [ -n "$ONLY" ] && [ "$slug" != "$ONLY" ] && continue
+            [ -f "$d/lesson.json" ] && [ -f "$d/assets/voice/narration.mp3" ] || continue
+            [ -f "$d/out/verify.json" ] && continue
+            echo "### $slug"
+            bash tools/new-lesson.sh "$slug" >/dev/null
+            (cd "$d" && bash scripts/build.sh 2>&1 | tee out/build.log) || { echo "build failed: $slug"; tail -40 "$d/out/build.log"; }
+          done
+      - name: commit outputs
+        run: |
+          git config user.name hxt-lessons-render && git config user.email hxt-lessons-render@users.noreply.github.com
+          git add -f lessons/*/out/lesson.mp4 lessons/*/out/lesson-9x16.mp4 lessons/*/out/thumb.png lessons/*/out/thumb-9x16.png lessons/*/out/verify.json lessons/*/out/build.log lessons/*/assets/voice/lines.json 2>/dev/null || true
+          git diff --cached --quiet && exit 0
+          git commit -qm "render: $(git diff --cached --name-only | cut -d/ -f2 | sort -u | tr '\n' ' ')"
+          for try in 1 2 3 4 5; do
+            git fetch -q origin main && git rebase -q origin/main && git push -q origin HEAD:main && exit 0
+            sleep $((try * 5))
+          done
+          exit 1
