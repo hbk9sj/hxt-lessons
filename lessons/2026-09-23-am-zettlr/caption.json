@@ -1,0 +1,24 @@
+{
+  "youtube_title": "Zettlr 4.8 adds admonitions: callouts in Markdown",
+  "description": "Zettlr 4.8.0 (September 18, 2026) adds admonitions: note, tip, info, warning and caution callouts, written with blockquote syntax. Also in this release, full-text search now treats a space as AND, not OR. Free and open source. Source: https://www.zettlr.com/post/zettlr-480-released",
+  "ig_caption": "Zettlr 4.8 finally lets your Markdown notes shout.\nFive callout types, written as > [!NOTE] — no plugin, no paid tier.\nHeads up: full-text search now treats a space as AND, not OR.\n\n#zettlr #zettelkasten #markdown #notetaking #pkm #opensource #academicwriting #writingtools #noteapps #productivity #tech",
+  "first_comment": "Source: https://www.zettlr.com/post/zettlr-480-released",
+  "hashtags": [
+    "#zettlr",
+    "#zettelkasten",
+    "#markdown",
+    "#notetaking",
+    "#pkm",
+    "#opensource",
+    "#academicwriting",
+    "#writingtools",
+    "#noteapps",
+    "#productivity",
+    "#tech"
+  ],
+  "sources": [
+    "https://docs.zettlr.com/en/",
+    "https://www.zettlr.com/post/zettlr-480-released",
+    "https://www.zettlr.com/download"
+  ]
+}
